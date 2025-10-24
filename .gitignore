@@ -1,3 +1,13 @@
+# For this Project
+data/
+weights/
+unsloth_compiled_cache/
+*.yaml
+*.log
+keep/
+*.ipynb_checkpoints
+*.ipynb
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

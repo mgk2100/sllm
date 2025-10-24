@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  unsloth:
+    image: unsloth/unsloth:stable
+    container_name: sl-unsloth-container
+    env_file:
+      - .env
+    ports:
+      - "1288:8888"
+    working_dir: /workspace
+    volumes:
+      - /home/user/Project/SL_SW/sl-sw-sllm:/workspace
+      - /home/user/.cache/huggingface:/home/unsloth/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['3']
+              capabilities: [gpu]
+    restart: unless-stopped

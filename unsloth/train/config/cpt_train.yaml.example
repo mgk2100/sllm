@@ -1,0 +1,122 @@
+# ============================================================================
+# CPT (Continued Pretraining) 학습 설정
+# ============================================================================
+
+# 모델 설정
+model:
+  name: unsloth/Qwen3-Coder-30B-A3B-Instruct # 모델 이름 (Hugging Face Hub)
+  max_seq_length: 4096      # 최대 시퀀스 길이
+  dtype: null               # 데이터 타입 (None = auto, float16, bfloat16)
+  load_in_4bit: true        # 4bit 양자화 로드 (메모리 절약)
+
+# LoRA 설정
+lora:
+  r: 128                    # LoRA rank (8, 16, 32, 64, 128 권장)
+  lora_alpha: 32            # LoRA alpha (scaling factor)
+  lora_dropout: 0           # LoRA dropout (0이 최적화됨)
+  bias: none                # Bias 설정 (none, all, lora_only)
+  use_gradient_checkpointing: unsloth  # Gradient checkpointing (unsloth 권장)
+  random_state: 3407        # 랜덤 시드
+  use_rslora: true          # Rank Stabilized LoRA 사용
+  loftq_config: null        # LoftQ 설정 (null이면 사용 안함)
+  
+  # LoRA를 적용할 모듈들 (CPT의 경우 embed_tokens, lm_head 포함 필수)
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+    - embed_tokens    # CPT에 필수
+    - lm_head         # CPT에 필수
+
+# 데이터 설정
+data:
+  train_path: 
+    - nick007x/github-code-2025
+    - /workspace/data/output/app_code.json
+  eval_path: null                    # 검증 데이터 경로 (null이면 사용 안함)
+  text_column: text                  # 텍스트 컬럼명
+  max_samples: null                  # 최대 샘플 수 (null이면 전체)
+  shuffle: true                      # 데이터 셔플 여부
+  seed: 42                           # 셔플 시드
+
+# 학습 설정
+training:
+  output_dir: /workspace/unsloth/weights       # 체크포인트 저장 경로
+  num_train_epochs: 3                      # 학습 에포크 수
+  per_device_train_batch_size: 2           # 디바이스당 배치 크기
+  per_device_eval_batch_size: 2            # 검증 배치 크기
+  gradient_accumulation_steps: 8           # Gradient accumulation (effective batch = 2*8=16)
+  
+  # 학습률 설정
+  learning_rate: 5e-6                    # 학습률
+  embedding_learning_rate: 1e-6         # Embedding 학습률
+  weight_decay: 0.01                       # Weight decay
+  warmup_steps: null                      # Warmup 스텝 수
+  warmup_ratio: 0.01                       # Warmup 비율 (warmup_steps 사용 시 null)
+  
+  # 최적화 설정
+  optim: adamw_8bit                        # 옵티마이저 (adamw_8bit, adamw_torch 등)
+  lr_scheduler_type: linear                # 학습률 스케줄러 (linear, cosine, constant 등)
+  max_grad_norm: 1.0                       # Gradient clipping
+  
+  # 정밀도 설정
+  fp16: false                              # FP16 사용 여부
+  bf16: true                               # BF16 사용 여부 (A100, H100 권장)
+  
+  # 로깅 설정
+  logging_steps: 10                        # 로깅 주기
+  logging_dir: ./logs                      # 로그 저장 경로
+  report_to: none                   # 리포팅 도구 (tensorboard, wandb, none)
+  
+  # 저장 설정
+  save_strategy: epoch                     # 저장 전략 (steps, epoch, no)
+  save_steps: 500                          # 체크포인트 저장 주기
+  save_total_limit: 1                      # 최대 체크포인트 개수
+  save_only_model: false                   # 모델만 저장 (optimizer 제외)
+  
+  # 평가 설정
+  evaluation_strategy: no                  # 평가 전략 (no, steps, epoch)
+  eval_steps: 500                          # 평가 주기
+  
+  # 기타 설정
+  seed: 3407                               # 전역 시드
+  data_seed: 42                            # 데이터 시드
+  remove_unused_columns: false             # 사용하지 않는 컬럼 제거
+  load_best_model_at_end: false            # 학습 종료 시 best model 로드
+  
+  # 분산 학습 설정
+  ddp_find_unused_parameters: false        # DDP unused parameters
+  dataloader_num_workers: 4                # 데이터로더 워커 수
+  dataloader_pin_memory: true              # Pin memory
+
+# 최종 모델 저장
+save:
+  final_model_path: ./models/cpt_llama3_final  # 최종 모델 저장 경로
+  merge_and_save: false                        # LoRA 어댑터를 base model에 병합 후 저장
+  push_to_hub: false                           # Hugging Face Hub에 업로드
+  hub_model_id: null                           # Hub 모델 ID
+  hub_private_repo: true                       # Private 레포지토리
+
+# W&B (Weights & Biases) 설정 (선택)
+wandb:
+  enabled: false                # W&B 사용 여부
+  project: cpt-llama3           # 프로젝트 이름
+  name: null                    # 실험 이름 (null이면 자동 생성)
+  tags:                         # 태그
+    - cpt
+    - llama3
+    - python-code
+  notes: Continued Pretraining for Python code generation  # 노트
+
+# 실험 메타데이터
+experiment:
+  name: cpt_python_llama3       # 실험 이름
+  description: Python 코드로 CPT 학습  # 설명
+  tags:                         # 태그
+    - python
+    - cpt
+    - code-generation

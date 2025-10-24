@@ -1,0 +1,1 @@
+python ./preprocess/make_autosar_cpt_data.py --input_dir data/Code/Static_Code --repo_id Static_code/ --output_path ./data/output/app_code.json
