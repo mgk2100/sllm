@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  Jinaai-Embedding-1.5b:
+    container_name: Jinaai-Embedding-1.5b
+    restart: always
+    image: vllm/vllm-openai:v0.11.0
+    ipc: host
+    # volumes:
+    command: ["--model", "jinaai/jina-code-embeddings-1.5b","--task","embedding",  "--served-model-name", "jina-code-embeddings-1.5b",  "--gpu-memory-utilization", "0.30", "--api-key", "S+nR5mYhX52exXsXbANsYnDYS7VgliJK5xmTsKHCrB0="]
+    ports:
+      - 8003:8000
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["1"]
+              capabilities: [gpu]
